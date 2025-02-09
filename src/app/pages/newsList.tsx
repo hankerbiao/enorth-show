@@ -3,18 +3,37 @@ import '@ant-design/v5-patch-for-react-19';
 import React, { useState, useEffect } from 'react';
 import { Input, Checkbox, Button, Table, Row, Col, Tag, DatePicker, message, Typography, Space, Tooltip } from 'antd';
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import axios from 'axios';
 import { ColumnsType } from 'antd/es/table';
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
 
-const NewsList = () => {
-    const [news, setNews] = useState([]);
+interface NewsItem {
+    id: string | number;
+    title: string;
+    url: string;
+    isFinanceOrEstate: boolean;
+    summary: string;
+    tags: string;
+    editor_time: string;
+}
+
+interface NewsParams {
+    keyword?: string;
+    startDate?: string | null;
+    endDate?: string | null;
+    isFinanceOrEstate?: boolean;
+    page?: number;
+    pageSize?: number;
+}
+
+const NewsList: React.FC = () => {
+    const [news, setNews] = useState<NewsItem[]>([]);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [showFocus, setShowFocus] = useState(false);
-    const [dateRange, setDateRange] = useState([null, dayjs().endOf('day')]);
+    const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(70);
@@ -23,21 +42,19 @@ const NewsList = () => {
     useEffect(() => {
         fetchNews({
             keyword: searchKeyword,
-            startDate: dateRange[0] ? dateRange[0].format('YYYY-MM-DD') : null,
-            endDate: dateRange[1] ? dateRange[1].format('YYYY-MM-DD') : null,
-            isFinanceOrEstate: showFocus
+            startDate: dateRange?.[0]?.format('YYYY-MM-DD') || null,
+            endDate: dateRange?.[1]?.format('YYYY-MM-DD') || null,
+            isFinanceOrEstate: showFocus,
+            page: currentPage,
+            pageSize: pageSize
         });
     }, [currentPage, pageSize]);
 
-    const fetchNews = async (params = {}) => {
+    const fetchNews = async (params: NewsParams = {}) => {
         setLoading(true);
         try {
-            const response = await axios.get('http://127.0.0.1:8001/api/v1/news', {
-                params: {
-                    ...params,
-                    page: currentPage,
-                    pageSize: pageSize
-                }
+            const response = await axios.get<{ items: NewsItem[], total: number }>('http://127.0.0.1:8001/api/v1/news', {
+                params: params
             });
             setNews(response.data.items);
             setTotal(response.data.total);
@@ -50,11 +67,13 @@ const NewsList = () => {
 
     const handleSearch = () => {
         setCurrentPage(1);
-        const params = {
+        const params: NewsParams = {
             keyword: searchKeyword,
-            startDate: dateRange[0] ? dateRange[0].format('YYYY-MM-DD') : null,
-            endDate: dateRange[1] ? dateRange[1].format('YYYY-MM-DD') : null,
-            isFinanceOrEstate: showFocus
+            startDate: dateRange?.[0]?.format('YYYY-MM-DD') || null,
+            endDate: dateRange?.[1]?.format('YYYY-MM-DD') || null,
+            isFinanceOrEstate: showFocus,
+            page: 1,
+            pageSize: pageSize
         };
         fetchNews(params);
     };
@@ -66,17 +85,6 @@ const NewsList = () => {
         setCurrentPage(1);
         fetchNews();
     };
-
-
-    interface NewsItem {
-        id: string | number;
-        title: string;
-        url: string;
-        isFinanceOrEstate: boolean;
-        summary: string;
-        tags: string;
-        editor_time: string;
-    }
 
     const columns: ColumnsType<NewsItem> = [
         {
@@ -103,7 +111,7 @@ const NewsList = () => {
                 <Tooltip
                     title={text || '暂无摘要'}
                     placement="topLeft"
-                    styles={{ root: { maxWidth: '400px' } }}
+                    overlayStyle={{ maxWidth: '400px' }}
                 >
                     <div style={{
                         maxWidth: 300,
@@ -188,7 +196,9 @@ const NewsList = () => {
                     <Col xs={24} md={16} lg={8}>
                         <RangePicker
                             value={dateRange}
-                            onChange={(dates) => setDateRange(dates)}
+                            onChange={(dates) => {
+                                setDateRange(dates);
+                            }}
                             style={{width: '100%'}}
                             size="large"
                             presets={[
@@ -240,7 +250,7 @@ const NewsList = () => {
                 overflow: 'hidden',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}>
-                <Table
+                <Table<NewsItem>
                     columns={columns}
                     dataSource={news}
                     rowKey="id"
@@ -258,9 +268,11 @@ const NewsList = () => {
                             setPageSize(pageSize);
                             fetchNews({
                                 keyword: searchKeyword,
-                                startDate: dateRange[0] ? dateRange[0].format('YYYY-MM-DD') : null,
-                                endDate: dateRange[1] ? dateRange[1].format('YYYY-MM-DD') : null,
-                                isFinanceOrEstate: showFocus
+                                startDate: dateRange?.[0]?.format('YYYY-MM-DD') || null,
+                                endDate: dateRange?.[1]?.format('YYYY-MM-DD') || null,
+                                isFinanceOrEstate: showFocus,
+                                page: page,
+                                pageSize: pageSize
                             });
                         },
                         onShowSizeChange: (current, size) => {
