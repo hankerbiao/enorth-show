@@ -53,7 +53,7 @@ const NewsList: React.FC = () => {
     const fetchNews = async (params: NewsParams = {}) => {
         setLoading(true);
         try {
-            const response = await axios.get<{ items: NewsItem[], total: number }>('http://127.0.0.1:8001/api/v1/news', {
+            const response = await axios.get<{ items: NewsItem[], total: number }>('http://192.168.3.113:8001/api/v1/news', {
                 params: params
             });
             setNews(response.data.items);
