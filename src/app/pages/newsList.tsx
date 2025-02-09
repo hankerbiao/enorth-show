@@ -5,6 +5,7 @@ import { Input, Checkbox, Button, Table, Row, Col, Tag, DatePicker, message, Typ
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import axios from 'axios';
+import { ColumnsType } from 'antd/es/table';
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
@@ -66,12 +67,23 @@ const NewsList = () => {
         fetchNews();
     };
 
-    const columns = [
+
+    interface NewsItem {
+        id: string | number;
+        title: string;
+        url: string;
+        isFinanceOrEstate: boolean;
+        summary: string;
+        tags: string;
+        editor_time: string;
+    }
+
+    const columns: ColumnsType<NewsItem> = [
         {
             title: '标题',
             dataIndex: 'title',
             key: 'title',
-            render: (text, record) => (
+            render: (text: string, record: NewsItem) => (
                 <a
                     href={record.url}
                     target="_blank"
@@ -87,7 +99,7 @@ const NewsList = () => {
             title: '文章摘要',
             dataIndex: 'summary',
             key: 'summary',
-            render: (text) => (
+            render: (text: string) => (
                 <Tooltip
                     title={text || '暂无摘要'}
                     placement="topLeft"
@@ -109,7 +121,7 @@ const NewsList = () => {
             title: '标签',
             dataIndex: 'tags',
             key: 'tags',
-            render: (tags) => {
+            render: (tags: string) => {
                 const tagArray = tags ? tags.split(',') : [];
                 return (
                     <>
