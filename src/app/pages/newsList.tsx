@@ -111,7 +111,7 @@ const NewsList: React.FC = () => {
                 <Tooltip
                     title={text || '暂无摘要'}
                     placement="topLeft"
-                    overlayStyle={{ maxWidth: '400px' }}
+                    styles={{ root: { maxWidth: '400px' } }}
                 >
                     <div style={{
                         maxWidth: 300,
